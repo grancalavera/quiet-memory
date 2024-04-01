@@ -1,15 +1,16 @@
-SELECT 'CREATE DATABASE mydb' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mydb')\gexec
+select 'create database qm' where not exists (select from pg_database where datname = 'qm')\gexec
+\connect qm
 
-CREATE EXTENSION IF NOT EXISTS vector;
+create extension if not exists vector;
+create extension if not exists citext;
 
-drop table if exists embeddings cascade;
+drop table if exists pages cascade;
 
-CREATE TABLE IF NOT EXISTS embeddings (
-    id bigserial PRIMARY KEY, 
-    embedding vector(3)
+create table if not exists pages (
+    id bigserial primary key, 
+    pageName citext unique not null,
+    embedding vector(1536)
 );
 
-INSERT INTO embeddings (embedding) VALUES ('[1,2,3]'), ('[4,5,6]');
 
-SELECT * FROM embeddings ORDER BY embedding <-> '[3,1,2]' LIMIT 5;
- 
+-- Vectors with up to 2,000 dimensions can be indexed.

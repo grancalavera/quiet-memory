@@ -1,13 +1,18 @@
 import { base64ToDataUrl } from "./lib/base64ToDataUrl";
+import { listFilesByExtension } from "./lib/listFilesByExtension";
 import { loadAndEncodeImageToBase64 } from "./lib/loadAndEncodeImageToBase64";
+import { loadText } from "./lib/loadText";
 import { openai } from "./lib/openai";
 import { resolvePath } from "./lib/resolvePath";
+import { saveText } from "./lib/saveText";
 
-const describedSuffix = ".described.txt";
+type ImageFormat = "jpeg" | "png";
+
+export const describedSuffix = ".described.txt";
 
 async function describeHandwrite(
   base64Image: string,
-  format: "jpeg" | "png" = "jpeg"
+  format: ImageFormat = "jpeg"
 ) {
   const userPrompt = `You have several tasks:
 
@@ -58,15 +63,28 @@ Structure your resonse in markdown as follows:
   return response.choices[0]?.message.content ?? "";
 }
 
-export async function describe(path: string) {
-  console.log("resolving path");
-  const resolved = await resolvePath(path);
+export async function describeCommand(path: string) {
+  const resolvedPath = await resolvePath(path);
+  let result = await loadText(resolvedPath + describedSuffix);
 
-  console.log("loading and encoding image to base64");
-  const base64 = await loadAndEncodeImageToBase64(resolved);
+  if (result) {
+    console.log(path + ": Page already described. Done.");
+    return;
+  }
 
-  console.log("describing handwrite");
-  const description = await describeHandwrite(base64);
+  console.log(path + ": loading and encoding image to base64");
+  const base64 = await loadAndEncodeImageToBase64(resolvedPath);
 
-  console.log(description);
+  console.log(path + ": describing handwrite");
+  result = await describeHandwrite(base64);
+
+  await saveText(resolvedPath + describedSuffix, result);
+
+  console.log(path + ": Page description complete");
+}
+
+export async function describeDirCommand(path: string) {
+  const resolvedPath = await resolvePath(path);
+  const files = await listFilesByExtension(resolvedPath, ".jpeg");
+  await Promise.allSettled(files.map(describeCommand));
 }

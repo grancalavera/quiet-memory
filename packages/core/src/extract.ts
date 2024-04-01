@@ -30,11 +30,11 @@ async function editText(text: string) {
   return result.choices[0]?.message.content ?? "";
 }
 
-export async function extractAndEdit(path: string) {
+export async function extractCommand(path: string) {
   const resolvedPath = await resolvePath(path);
-  let edited = await loadText(resolvedPath + editedSuffix);
+  let result = await loadText(resolvedPath + editedSuffix);
 
-  if (edited) {
+  if (result) {
     console.log("Text already detected and edited. Done.");
     return;
   }
@@ -52,8 +52,9 @@ export async function extractAndEdit(path: string) {
   console.log("Text detection complete");
 
   console.log("Editing text...");
-  edited = await editText(detection);
-  await saveText(resolvedPath + editedSuffix, edited);
+  result = await editText(detection);
+
+  await saveText(resolvedPath + editedSuffix, result);
 
   console.log("Text editing complete");
 }
