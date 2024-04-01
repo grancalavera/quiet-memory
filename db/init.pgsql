@@ -8,7 +8,7 @@ drop table if exists pages cascade;
 
 create table if not exists pages (
     id bigserial primary key, 
-    pageName citext unique not null,
+    name citext unique not null,
     embedding vector(1536)
 );
 
