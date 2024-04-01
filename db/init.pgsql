@@ -13,4 +13,9 @@ create table if not exists pages (
 );
 
 
--- Vectors with up to 2,000 dimensions can be indexed.
+-- vectors with up to 2,000 dimensions can be indexed.
+-- https://cloud.google.com/blog/products/databases/faster-similarity-search-performance-with-pgvector-indexes/
+create index on pages
+    using hnsw(embedding vector_cosine_ops)
+    with (m = 24, ef_construction = 100);
+b

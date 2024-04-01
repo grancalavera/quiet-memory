@@ -4,7 +4,7 @@ import { openai } from "./lib/openai";
 import { resolvePath } from "./lib/resolvePath";
 import { saveText } from "./lib/saveText";
 
-const suffix = ".embedding.json";
+export const embeddingSuffix = ".embedding.json";
 
 async function createEmbedding(path: string) {
   const text = await loadText(path);
@@ -24,7 +24,7 @@ async function createEmbedding(path: string) {
 }
 
 export const createDocumentEmbeddingCommand = async (path: string) => {
-  if (await loadText(path + suffix)) {
+  if (await loadText(path + embeddingSuffix)) {
     console.log(`Embedding already exists for ${path}`);
     return;
   }
@@ -42,9 +42,9 @@ export const createDocumentEmbeddingCommand = async (path: string) => {
     return;
   }
 
-  saveText(path + suffix, JSON.stringify(embedding));
+  saveText(path + embeddingSuffix, JSON.stringify(embedding));
 
-  console.log(`Embedding created and saved to ${path + suffix}`);
+  console.log(`Embedding created and saved to ${path + embeddingSuffix}`);
 };
 
 export const createEmbeddingsForDirectoryCommand =

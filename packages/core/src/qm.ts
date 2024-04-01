@@ -1,5 +1,4 @@
 import { program } from "commander";
-import { extractCommand } from "./extract";
 import {
   describeCommand,
   describeDirCommand,
@@ -8,6 +7,7 @@ import {
 import {
   createDocumentEmbeddingCommand,
   createEmbeddingsForDirectoryCommand,
+  embeddingSuffix,
 } from "./embed";
 import { generateImageCommand } from "./generate-image";
 
