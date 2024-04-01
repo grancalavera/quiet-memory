@@ -1,0 +1,5 @@
+#!/bin/bash
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+
+echo "Initializing database..."
+psql -U admin -f "${SCRIPT_DIR}/init.pgsql"
