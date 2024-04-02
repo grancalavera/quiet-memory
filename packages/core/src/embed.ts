@@ -1,27 +1,10 @@
+import { createEmbedding } from "./lib/createEmbedding";
 import { listFilesByExtension } from "./lib/listFilesByExtension";
 import { loadText } from "./lib/loadText";
-import { openai } from "./lib/openai";
 import { resolvePath } from "./lib/resolvePath";
 import { saveText } from "./lib/saveText";
 
 export const embeddingSuffix = ".embedding.json";
-
-async function createEmbedding(path: string) {
-  const text = await loadText(path);
-  if (!text) {
-    console.log(`No text found at path ${path}`);
-    return;
-  }
-
-  const sanitised = text.replace(/\n/g, " ");
-
-  const embedding = await openai.embeddings.create({
-    model: "text-embedding-ada-002",
-    input: sanitised,
-  });
-
-  return embedding;
-}
 
 export const createDocumentEmbeddingCommand = async (path: string) => {
   if (await loadText(path + embeddingSuffix)) {
@@ -29,7 +12,13 @@ export const createDocumentEmbeddingCommand = async (path: string) => {
     return;
   }
 
-  const embeddingResponse = await createEmbedding(path);
+  const document = await loadText(path);
+  if (!document) {
+    console.log(`No document found at path ${path}`);
+    return;
+  }
+
+  const embeddingResponse = await createEmbedding(document);
 
   if (!embeddingResponse) {
     console.log(`Embedding creation failed for ${path}`);
@@ -42,7 +31,10 @@ export const createDocumentEmbeddingCommand = async (path: string) => {
     return;
   }
 
-  saveText(path + embeddingSuffix, JSON.stringify(embedding));
+  saveText(
+    path + embeddingSuffix,
+    JSON.stringify({ document, embedding }, null, 2)
+  );
 
   console.log(`Embedding created and saved to ${path + embeddingSuffix}`);
 };

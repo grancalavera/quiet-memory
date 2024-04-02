@@ -9,6 +9,7 @@ drop table if exists pages cascade;
 create table if not exists pages (
     id bigserial primary key, 
     name citext unique not null,
+    document text not null,
     embedding vector(1536)
 );
 
@@ -18,4 +19,3 @@ create table if not exists pages (
 create index on pages
     using hnsw(embedding vector_cosine_ops)
     with (m = 24, ef_construction = 100);
-b

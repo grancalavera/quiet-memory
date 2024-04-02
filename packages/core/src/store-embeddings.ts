@@ -4,6 +4,11 @@ import { listFilesByExtension } from "./lib/listFilesByExtension";
 import { loadText } from "./lib/loadText";
 import { resolvePath } from "./lib/resolvePath";
 
+type EmbeddingDescription = {
+  document: string;
+  embedding: number[];
+};
+
 const db = new Pool();
 
 const storeEmbedding =
@@ -16,21 +21,26 @@ const storeEmbedding =
       return;
     }
 
-    const embedding = await loadText(resolvedPath);
+    const rawEmbedding = await loadText(resolvedPath);
 
-    if (!embedding) {
+    if (!rawEmbedding) {
       console.error(`Could not load embedding for from path: ${resolvePath}`);
       return;
     }
 
+    const { document, embedding }: EmbeddingDescription =
+      JSON.parse(rawEmbedding);
+
     const name = basename(path);
 
     const result = await client.query({
-      text: `INSERT INTO pages(name, embedding) 
-      VALUES($1, $2) 
-      ON CONFLICT (name) DO UPDATE SET embedding = EXCLUDED.embedding 
+      text: `INSERT INTO pages(name, document, embedding) 
+      VALUES($1, $2, $3) 
+      ON CONFLICT (name) DO UPDATE SET 
+      embedding = EXCLUDED.embedding,
+      document = EXCLUDED.document
       RETURNING *`,
-      values: [name, embedding],
+      values: [name, document, JSON.stringify(embedding)],
     });
 
     console.log(`Store embedding`, { result });

@@ -7,7 +7,6 @@ import {
 import {
   createDocumentEmbeddingCommand,
   createEmbeddingsForDirectoryCommand,
-  embeddingSuffix,
 } from "./embed";
 import { generateImageCommand } from "./generate-image";
 
@@ -45,6 +44,11 @@ program
     "path to text file containing prompt for image generation."
   )
   .action(generateImageCommand);
+
+program
+  .command("query")
+  .argument("<query>", "query to run")
+  .action(queryCommand);
 
 async function main() {
   await program.parseAsync(process.argv);
