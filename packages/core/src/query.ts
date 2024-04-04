@@ -1,5 +1,6 @@
 import { createEmbedding } from "./lib/createEmbedding";
 import { Pool } from "pg";
+
 const db = new Pool();
 
 export const queryCommand = async (query: string) => {
@@ -15,5 +16,5 @@ export const queryCommand = async (query: string) => {
     values: [JSON.stringify(embedding)],
   });
 
-  console.log(result.rows.map((x) => x.document));
+  console.log(result.rows.flatMap((x) => [x.name, x.document]).join("\n\n"));
 };

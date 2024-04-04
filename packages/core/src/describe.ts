@@ -8,37 +8,29 @@ import { saveText } from "./lib/saveText";
 
 type ImageFormat = "jpeg" | "png";
 
-export const describedSuffix = ".described.txt";
+export const describedSuffix = ".described.json";
 
 async function describeHandwrite(
   base64Image: string,
   format: ImageFormat = "jpeg"
 ) {
-  const userPrompt = `You have several tasks:
+  const userPrompt = `Perform these tasks:
+- KEYWORDS: extract a concise list of keywords that describe the topics treated in the text, leaving out keywords for non-central topics.
+- TRANSCRIPTION: Transcribe the text in the image, removing any unnecessary line breaks.
+- DATES: Dates are formatted as YYYYMMDD and underlined, find them and format them as YYYY-MM-DD.
 
-1. Give one overall topic or theme: THEME.
-2. Format any underlined dates with this format YYYYMMDD found on the page, 
-   and represent them as ISO-8601 strings, asumming UTC, for example the date
-   20240430 should be represented as 2024-03-30T00:00:00.000Z, and only keep the
-   ISO-8601 representation: DATES.
-2. Summarise what is written in the page: SUMMARY.
-3. Give brief opinion on the content: OPINION
-4. Give a description of the page layout and how the content is written: DESCRIPTION
+Structure your response as a plain JSON document implementing this TypeScript type:
 
-Structure your resonse in markdown as follows:
-# {THEME}
+type HandwriteDescription = {
+  // A list of comma separated keywords that describe the topics treated in the text.
+  keywords: string;
+  // The text transcription, removing any unnecessary line breaks.
+  transcription: string;
+  // A list of dates formatted as YYYY-MM-DD.
+  dates: string[];
+};
 
-## Dates
-{DATES}
-
-## Summary
-{SUMMARY}
-
-## Opinion
-{OPINION}
-
-## Description
-{DESCRIPTION}
+Do not wrap the response in triple backticks or any other formatting.
 `;
 
   const response = await openai.chat.completions.create({
@@ -57,19 +49,24 @@ Structure your resonse in markdown as follows:
         ],
       },
     ],
-    temperature: 0.5,
+    temperature: 0,
   });
 
   return response.choices[0]?.message.content ?? "";
 }
 
-export async function describeCommand(path: string) {
+export async function describeCommand(path: string, force: boolean) {
   const resolvedPath = await resolvePath(path);
-  let result = await loadText(resolvedPath + describedSuffix);
 
-  if (result) {
-    console.log(path + ": Page already described. Done.");
-    return;
+  let result: string | undefined = undefined;
+
+  if (!force) {
+    result = await loadText(resolvedPath + describedSuffix);
+
+    if (result) {
+      console.log(path + ": Page already described. Done.");
+      return;
+    }
   }
 
   console.log(path + ": loading and encoding image to base64");
@@ -83,8 +80,8 @@ export async function describeCommand(path: string) {
   console.log(path + ": Page description complete");
 }
 
-export async function describeDirCommand(path: string) {
+export async function describeDirCommand(path: string, force: boolean) {
   const resolvedPath = await resolvePath(path);
   const files = await listFilesByExtension(resolvedPath, ".jpeg");
-  await Promise.allSettled(files.map(describeCommand));
+  await Promise.allSettled(files.map((x) => describeCommand(x, force)));
 }
