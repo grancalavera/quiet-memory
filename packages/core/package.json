@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "qm": "op run -- ts-node ./src/qm.ts",
+    "qm": "op run -- ts-node ./src/program.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
