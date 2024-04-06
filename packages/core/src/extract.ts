@@ -1,60 +1,41 @@
 import vision from "@google-cloud/vision";
-import { resolvePath } from "./lib/resolvePath";
 import { loadText } from "./lib/loadText";
+import { resolvePath } from "./lib/resolvePath";
 import { saveText } from "./lib/saveText";
-import { openai } from "./lib/openai";
+import { listFilesByExtension } from "./lib/listFilesByExtension";
 
-const rawSuffix = ".raw.txt";
-const editedSuffix = ".edited.txt";
+export const extractSuffix = ".text-detection.txt";
 
 async function detectText(sourceFile: string) {
   const client = new vision.ImageAnnotatorClient({ projectId: "quiet-memory" });
   const [response] = await client.textDetection(sourceFile);
-  return response.fullTextAnnotation?.text ?? "";
+  const detection = response.fullTextAnnotation?.text ?? "";
+  return detection.replace(/\n/g, " ");
 }
 
-async function editText(text: string) {
-  const systemPrompt = `Act as a copy editor reviewing OCR results.
-    Fix the provided copy for common errors like typos or mis-recognitions
-    and misplaced line breaks. Don't add anything to the text, just the corrections.`;
-
-  const result = await openai.chat.completions.create({
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: text },
-    ],
-    model: "gpt-4",
-    temperature: 0.5,
-  });
-
-  return result.choices[0]?.message.content ?? "";
-}
-
-export async function extractCommand(path: string) {
+export async function extractCommand(path: string, force = false) {
   const resolvedPath = await resolvePath(path);
-  let result = await loadText(resolvedPath + editedSuffix);
 
-  if (result) {
-    console.log("Text already detected and edited. Done.");
-    return;
+  let result: string | undefined = undefined;
+
+  if (!force) {
+    result = await loadText(resolvedPath + extractSuffix);
+
+    if (result) {
+      console.log("Text already detected. Done.");
+      return;
+    }
   }
 
-  let detection = await loadText(resolvedPath + rawSuffix);
-
-  if (detection) {
-    console.log("Using cached text detection results");
-  } else {
-    console.log("Performing text detection...");
-    detection = await detectText(resolvedPath);
-    await saveText(resolvedPath + rawSuffix, detection);
-  }
-
-  console.log("Text detection complete");
-
-  console.log("Editing text...");
-  result = await editText(detection);
-
-  await saveText(resolvedPath + editedSuffix, result);
-
-  console.log("Text editing complete");
+  result = await detectText(resolvedPath);
+  const outPath = resolvedPath + extractSuffix;
+  await saveText(outPath, result);
+  console.log("Text detection complete: " + outPath);
 }
+
+export const extractDirCommand =
+  (extension: string) => async (path: string) => {
+    const resolvedPath = await resolvePath(path);
+    const files = await listFilesByExtension(resolvedPath, extension);
+    await Promise.allSettled(files.map((x) => extractCommand(x)));
+  };

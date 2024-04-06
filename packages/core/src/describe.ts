@@ -15,23 +15,8 @@ async function describeHandwrite(
   format: ImageFormat = "jpeg"
 ) {
   const userPrompt = `Perform these tasks:
-- KEYWORDS: extract a concise list of keywords that describe the topics treated in the text, leaving out keywords for non-central topics.
-- TRANSCRIPTION: Transcribe the text in the image, removing any unnecessary line breaks.
-- DATES: Dates are formatted as YYYYMMDD and underlined, find them and format them as YYYY-MM-DD.
-
-Structure your response as a plain JSON document implementing this TypeScript type:
-
-type HandwriteDescription = {
-  // A list of comma separated keywords that describe the topics treated in the text.
-  keywords: string;
-  // The text transcription, removing any unnecessary line breaks.
-  transcription: string;
-  // A list of dates formatted as YYYY-MM-DD.
-  dates: string[];
-};
-
-Do not wrap the response in triple backticks or any other formatting.
-`;
+  - Transcribe the text in the image, removing any unnecessary line breaks.`;
+  // const userPrompt = `Transcribe the text in the image, removing any unnecessary line breaks.`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4-vision-preview",
@@ -74,10 +59,11 @@ export async function describeCommand(path: string, force: boolean) {
 
   console.log(path + ": describing handwrite");
   result = await describeHandwrite(base64);
+  const savePath = resolvedPath + describedSuffix;
 
-  await saveText(resolvedPath + describedSuffix, result);
+  await saveText(savePath, result);
 
-  console.log(path + ": Page description complete");
+  console.log(path + ": Page description complete. Save at " + savePath);
 }
 
 export async function describeDirCommand(path: string, force: boolean) {
