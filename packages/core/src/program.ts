@@ -6,11 +6,9 @@ import {
   detectFileCommand,
   editDirCommand,
   editFileCommand,
+  embedCommand,
+  embedDirCommand,
 } from "./commands";
-import {
-  createDocumentEmbeddingCommand,
-  createEmbeddingsForDirectoryCommand,
-} from "./embed";
 import { queryCommand } from "./query";
 
 program.name("qm");
@@ -52,14 +50,16 @@ program
   .action(describeDirCommand);
 
 program
-  .command("embed-document")
-  .argument("<path>", "path to text file to embed.")
-  .action(createDocumentEmbeddingCommand);
+  .command("embed")
+  .argument("<path>", "path to document to embed")
+  .option("--force", "overwrite any existing documents", false)
+  .action(embedCommand);
 
 program
   .command("embed-dir")
   .argument("<path>", "path to directory to embed")
-  .action(createEmbeddingsForDirectoryCommand("describedSuffix"));
+  .option("--force", "overwrite any existing documents", false)
+  .action(embedDirCommand);
 
 program
   .command("query")

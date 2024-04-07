@@ -1,8 +1,13 @@
-import { createEmbedding } from "./lib/createEmbedding";
-import { listFilesByExtension } from "./lib/listFilesByExtension";
-import { loadText } from "./lib/loadText";
-import { resolvePath } from "./lib/resolvePath";
-import { saveText } from "./lib/saveText";
+import { createEmbedding } from "../lib/createEmbedding";
+import { listFilesByExtension } from "../lib/listFilesByExtension";
+import { loadText } from "../lib/loadText";
+import { resolvePath } from "../lib/resolvePath";
+import { saveText } from "../lib/saveText";
+
+export const embed = async (document: string): Promise<string> => {
+  const { embedding } = await createEmbedding(document);
+  return JSON.stringify({ document, embedding }, null, 2);
+};
 
 export const embeddingSuffix = ".embedding.json";
 
