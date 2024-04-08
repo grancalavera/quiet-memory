@@ -11,6 +11,6 @@ export type EmbeddingDescription = z.infer<typeof EmbeddingDescription>;
 export const embed = async (
   documentDescription: DocumentDescription
 ): Promise<EmbeddingDescription> => {
-  const embedding = await createEmbedding(documentDescription.document);
+  const embedding = await createEmbedding(documentDescription.content);
   return { ...documentDescription, embedding };
 };

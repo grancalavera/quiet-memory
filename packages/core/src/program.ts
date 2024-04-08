@@ -56,15 +56,10 @@ program
   .argument("<path>", "path to embedding to store")
   .action(commands.storeEmbeddingCommand);
 
-// program
-//   .command("store-embedding")
-//   .argument("<path>", "path to text file to store")
-//   .action(storeEmbeddingCommand);
-
-// program
-//   .command("store-embeddings-dir")
-//   .argument("<path>", "path to directory to store")
-//   .action(storeEmbeddingsForDirectoryCommand(embeddingSuffix));
+program
+  .command("store-dir")
+  .argument("<path>", "path to embedding directory to store")
+  .action(commands.storeEmbeddingDirCommand);
 
 // program
 //   .command("query")

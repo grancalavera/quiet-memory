@@ -50,7 +50,16 @@ export const makeFileCommand =
       return;
     }
 
-    const result = await processFile(input);
+    let result: string;
+
+    try {
+      result = await processFile(input);
+    } catch (error) {
+      console.error(`[${commandName}] ${error}`);
+      console.error(`[${commandName}] ${input}`);
+      process.exit(1);
+    }
+
     await saveText(destPath, result);
     console.log(`[${commandName}] done: ${destPath}`);
   };

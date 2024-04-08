@@ -1,3 +1,4 @@
+import { listFilesByExtension } from "../lib/listFilesByExtension";
 import { loadText } from "../lib/loadText";
 import { resolvePath } from "../lib/resolvePath";
 import { DocumentDescription, describe } from "../services/describe";
@@ -70,7 +71,7 @@ const embedFile: ProcessFile = {
 
 const embedDir: ProcessDir = {
   ...embedFile,
-  readExtension: extensions.edited,
+  readExtension: extensions.described,
 };
 
 export const detectFileCommand = makeFileCommand(detectFile);
@@ -91,12 +92,40 @@ export const storeEmbeddingCommand = async (path: string) => {
 
   if (!json) {
     console.error(
-      `[store-embeding] could not load embedding from path: ${resolvedPath}`
+      `[store] could not load embedding from path: ${resolvedPath}`
     );
     return;
   }
 
   const embedding = EmbeddingDescription.parse(JSON.parse(json));
-  const rows = await store(embedding);
-  console.log(`[store-embeding] ${rows.length} rows stored`);
+  const rows = await store([embedding]);
+  console.log(`[store] ${rows.length} rows stored`);
+};
+
+export const storeEmbeddingDirCommand = async (path: string) => {
+  const resolvedPath = await resolvePath(path);
+  const files = await listFilesByExtension(resolvedPath, extensions.embedded);
+
+  const results = await Promise.allSettled(
+    files.map(async (file) => {
+      const json = await loadText(file);
+      if (!json) {
+        const message = `[store-dir] could not load embedding from path: ${file}`;
+        console.error(message);
+        throw new Error(message);
+      }
+      return EmbeddingDescription.parse(JSON.parse(json));
+    })
+  );
+
+  const embeddings = results
+    .filter(
+      (result): result is PromiseFulfilledResult<EmbeddingDescription> =>
+        result.status === "fulfilled"
+    )
+    .map((result) => result.value);
+
+  const rows = await store(embeddings);
+
+  console.log(`[store-dir] ${rows.length} rows stored`);
 };

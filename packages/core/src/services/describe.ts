@@ -9,7 +9,7 @@ export const DocumentMetadata = z.object({
 });
 
 export const DocumentDescription = DocumentMetadata.extend({
-  document: z.string(),
+  content: z.string(),
 });
 
 export type DocumentMetadata = z.infer<typeof DocumentMetadata>;
@@ -33,9 +33,9 @@ Only return the JSON document, do not wrap it in triple backticks or any other f
 );
 
 export const describe = async (
-  document: string
+  content: string
 ): Promise<DocumentDescription> => {
-  const description = await completeDescription(document);
+  const description = await completeDescription(content);
   const metadata = DocumentMetadata.parse(JSON.parse(description));
-  return { ...metadata, document };
+  return { ...metadata, content };
 };
