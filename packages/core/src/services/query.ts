@@ -1,4 +1,4 @@
-import { createEmbedding } from "./lib/createEmbedding";
+import { createEmbedding } from "../lib/createEmbedding";
 import { Pool } from "pg";
 
 const db = new Pool();

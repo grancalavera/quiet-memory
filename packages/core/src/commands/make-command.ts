@@ -9,7 +9,7 @@ export type CommandOptions = {
 };
 
 export type ProcessFile = {
-  processFile: (path: string) => Promise<string>;
+  run: (input: string) => Promise<string>;
   commandName: string;
   writeExtension: string;
   customLoader?: (path: string) => Promise<string | undefined>;
@@ -24,8 +24,12 @@ export const makeFileCommand =
   async (sourcePath: string, options: CommandOptions): Promise<void> => {
     console.log(`[${processor.commandName}] processing: ${sourcePath}`);
     const { force } = options;
-    const { processFile, commandName, writeExtension, customLoader } =
-      processor;
+    const {
+      run: processFile,
+      commandName,
+      writeExtension,
+      customLoader,
+    } = processor;
 
     const resolvedPath = await resolvePath(sourcePath);
     const destPath = resolvedPath + writeExtension;
@@ -54,8 +58,8 @@ export const makeFileCommand =
 export const makeDirCommand =
   (processDir: ProcessDir) =>
   async (dirPath: string, options: CommandOptions): Promise<void> => {
-    const { readExtension, ...processFile } = processDir;
-    const processFileCommand = makeFileCommand(processFile);
+    const { readExtension, ...processor } = processDir;
+    const processFileCommand = makeFileCommand(processor);
     const resolvedPath = await resolvePath(dirPath);
     const files = await listFilesByExtension(resolvedPath, readExtension);
     console.log(`[${processDir.commandName}] found:\n${files.join("\n")}`);

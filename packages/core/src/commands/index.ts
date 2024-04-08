@@ -1,19 +1,28 @@
-import { describe } from "../services/describe";
+import { loadText } from "../lib/loadText";
+import { resolvePath } from "../lib/resolvePath";
+import { DocumentDescription, describe } from "../services/describe";
 import { detect } from "../services/detect";
 import { edit } from "../services/edit";
-import { createEmbedding } from "../lib/createEmbedding";
+import { EmbeddingDescription, embed } from "../services/embed";
+import { store } from "../services/store";
 import {
   ProcessDir,
   ProcessFile,
   makeDirCommand,
   makeFileCommand,
 } from "./make-command";
-import { embed } from "../services/embed";
+
+const extensions = {
+  detected: ".detect.txt",
+  edited: ".edit.txt",
+  described: ".describe.json",
+  embedded: ".embed.json",
+};
 
 const detectFile: ProcessFile = {
-  processFile: detect,
+  run: detect,
   commandName: "detect",
-  writeExtension: ".detect.txt",
+  writeExtension: extensions.detected,
   customLoader: async (path) => path,
 };
 
@@ -23,36 +32,45 @@ const detectDir: ProcessDir = {
 };
 
 const editFile: ProcessFile = {
-  processFile: edit,
+  run: edit,
   commandName: "edit",
-  writeExtension: ".edit.txt",
+  writeExtension: extensions.edited,
 };
 
 const editDir: ProcessDir = {
   ...editFile,
-  readExtension: detectDir.writeExtension,
+  readExtension: extensions.detected,
 };
 
 const describeFile: ProcessFile = {
-  processFile: describe,
+  run: async (document) => {
+    const description = await describe(document);
+    return JSON.stringify(description, null, 2);
+  },
   commandName: "describe",
-  writeExtension: ".describe.json",
+  writeExtension: extensions.described,
 };
 
 const describeDir: ProcessDir = {
   ...describeFile,
-  readExtension: editFile.writeExtension,
+  readExtension: extensions.edited,
 };
 
 const embedFile: ProcessFile = {
-  processFile: embed,
+  run: async (jsonDescription) => {
+    const documentDescription = DocumentDescription.parse(
+      JSON.parse(jsonDescription)
+    );
+    const embeddingDescription = await embed(documentDescription);
+    return JSON.stringify(embeddingDescription, null, 2);
+  },
   commandName: "embed",
-  writeExtension: ".embed.json",
+  writeExtension: extensions.embedded,
 };
 
 const embedDir: ProcessDir = {
   ...embedFile,
-  readExtension: editFile.writeExtension,
+  readExtension: extensions.edited,
 };
 
 export const detectFileCommand = makeFileCommand(detectFile);
@@ -66,3 +84,19 @@ export const describeDirCommand = makeDirCommand(describeDir);
 
 export const embedCommand = makeFileCommand(embedFile);
 export const embedDirCommand = makeDirCommand(embedDir);
+
+export const storeEmbeddingCommand = async (path: string) => {
+  const resolvedPath = await resolvePath(path);
+  const json = await loadText(resolvedPath);
+
+  if (!json) {
+    console.error(
+      `[store-embeding] could not load embedding from path: ${resolvedPath}`
+    );
+    return;
+  }
+
+  const embedding = EmbeddingDescription.parse(JSON.parse(json));
+  const rows = await store(embedding);
+  console.log(`[store-embeding] ${rows.length} rows stored`);
+};
