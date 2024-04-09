@@ -1,7 +1,14 @@
+import { basename, dirname, join } from "path";
+import { createEmbedding } from "../lib/createEmbedding";
 import { listFilesByExtension } from "../lib/listFilesByExtension";
 import { loadText } from "../lib/loadText";
 import { resolvePath } from "../lib/resolvePath";
-import { DocumentDescription, describe } from "../services/describe";
+import { saveText } from "../lib/saveText";
+import {
+  DocumentDescription,
+  DocumentMetadata,
+  describe,
+} from "../services/describe";
 import { detect } from "../services/detect";
 import { edit } from "../services/edit";
 import { EmbeddingDescription, embed } from "../services/embed";
@@ -12,6 +19,7 @@ import {
   makeDirCommand,
   makeFileCommand,
 } from "./make-command";
+import { query } from "../services/query";
 
 const extensions = {
   detected: ".detect.txt",
@@ -128,4 +136,21 @@ export const storeEmbeddingDirCommand = async (path: string) => {
   const rows = await store(embeddings);
 
   console.log(`[store-dir] ${rows.length} rows stored`);
+};
+
+export const embedQueryCommand = async (path: string, query: string) => {
+  const dir = dirname(path);
+  const file = basename(path);
+
+  const embedding = await createEmbedding(query);
+
+  const resolvedDir = await resolvePath(dir);
+  const resolvedPath = join(resolvedDir, file);
+  await saveText(resolvedPath, JSON.stringify(embedding));
+  console.log(`[embed-query] done: ${resolvedPath}`);
+};
+
+export const queryCommand = async (queryString: string) => {
+  const rows = await query(queryString);
+  console.log(rows);
 };

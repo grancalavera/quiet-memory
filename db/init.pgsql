@@ -17,7 +17,7 @@ create table documents (
 
 -- Create a function to search for documents
 create function match_documents (
-  query_embedding vector(1536),
+  query_embedding vector(1536), 
   match_count int DEFAULT null,
   filter jsonb DEFAULT '{}'
 ) returns table (
@@ -44,6 +44,9 @@ begin
   limit match_count;
 end;
 $$;
+
+-- calling a function 
+-- https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html#SQL-SYNTAX-CALLING-FUNCS
 
 
 -- vectors with up to 2,000 dimensions can be indexed.

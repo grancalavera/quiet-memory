@@ -1,20 +1,33 @@
 import { createEmbedding } from "../lib/createEmbedding";
 import { Pool } from "pg";
+import { DocumentMetadata } from "./describe";
 
 const db = new Pool();
 
-export const queryCommand = async (query: string) => {
-  const response = await createEmbedding(query);
-  const embedding = response.data[0]?.embedding;
+type QueryOptions = {
+  limit?: number;
+  filter?: Partial<DocumentMetadata>;
+};
+
+export const query = async (
+  query: string,
+  { filter = {}, limit = 3 }: QueryOptions = {}
+) => {
+  const embedding = await createEmbedding(query);
+
   if (!embedding) {
     console.log(`Embedding creation failed for ${query}`);
     return;
   }
 
   const result = await db.query({
-    text: `SELECT * FROM pages ORDER BY embedding <=> $1 LIMIT 1`,
-    values: [JSON.stringify(embedding)],
+    text: `SELECT * from match_documents($1, $2, $3)`,
+    values: [
+      JSON.stringify(embedding),
+      limit.toString(),
+      JSON.stringify(filter),
+    ],
   });
 
-  console.log(result.rows.flatMap((x) => [x.name, x.document]).join("\n\n"));
+  return result.rows;
 };

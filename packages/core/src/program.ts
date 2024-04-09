@@ -61,10 +61,16 @@ program
   .argument("<path>", "path to embedding directory to store")
   .action(commands.storeEmbeddingDirCommand);
 
-// program
-//   .command("query")
-//   .argument("<query>", "query to run")
-//   .action(queryCommand);
+program
+  .command("embed-query")
+  .argument("<path>", "path to embedded query document")
+  .argument("<query>", "query to embed")
+  .action(commands.embedQueryCommand);
+
+program
+  .command("query")
+  .argument("<query>", "query string")
+  .action(commands.queryCommand);
 
 async function main() {
   await program.parseAsync(process.argv);
