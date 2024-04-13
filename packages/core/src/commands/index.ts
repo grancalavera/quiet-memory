@@ -4,22 +4,19 @@ import { listFilesByExtension } from "../lib/listFilesByExtension";
 import { loadText } from "../lib/loadText";
 import { resolvePath } from "../lib/resolvePath";
 import { saveText } from "../lib/saveText";
-import {
-  DocumentDescription,
-  DocumentMetadata,
-  describe,
-} from "../services/describe";
+import { DocumentDescription, describe } from "../services/describe";
 import { detect } from "../services/detect";
 import { edit } from "../services/edit";
 import { EmbeddingDescription, embed } from "../services/embed";
+import { query } from "../services/query";
 import { store } from "../services/store";
 import {
+  CommandOptions,
   ProcessDir,
   ProcessFile,
   makeDirCommand,
   makeFileCommand,
 } from "./make-command";
-import { query } from "../services/query";
 
 const extensions = {
   detected: ".detect.txt",
@@ -153,4 +150,37 @@ export const embedQueryCommand = async (path: string, query: string) => {
 export const queryCommand = async (queryString: string) => {
   const rows = await query(queryString);
   console.log(rows);
+};
+
+const processFile = async (path: string) => {
+  const detectResult = await detect(path);
+  const editResult = await edit(detectResult);
+  const describeResult = await describe(editResult);
+  const embedResult = await embed(describeResult);
+  return embedResult;
+};
+
+export const processFileCommand = async (path: string) => {
+  const resolvedPath = await resolvePath(path);
+  const embedResult = await processFile(resolvedPath);
+  const storeResult = await store([embedResult]);
+  console.log(`[process-file] ${storeResult.length} rows stored`);
+};
+
+export const processDirCommand = async (path: string, extension = ".jpeg") => {
+  console.log(`[process-dir] path: ${path}, extension: ${extension}`);
+
+  const resolvedPath = await resolvePath(path);
+  const files = await listFilesByExtension(resolvedPath, extension);
+  const results = await Promise.allSettled(files.map(processFile));
+
+  const embeddings = results
+    .filter(
+      (result): result is PromiseFulfilledResult<EmbeddingDescription> =>
+        result.status === "fulfilled"
+    )
+    .map((result) => result.value);
+
+  const rows = await store(embeddings);
+  console.log(`[process-dir] ${rows.length} rows stored`);
 };

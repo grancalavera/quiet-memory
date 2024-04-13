@@ -72,6 +72,19 @@ program
   .argument("<query>", "query string")
   .action(commands.queryCommand);
 
+program
+  .command("process-file")
+  .argument("<path>", "path to file to process")
+  .action(commands.processFileCommand);
+
+program
+  .command("process-dir")
+  .argument("<path>", "path to directory to process")
+  .option("--extension <string>", "extension to filter files by")
+  .action((path, options) =>
+    commands.processDirCommand(path, options.extension)
+  );
+
 async function main() {
   await program.parseAsync(process.argv);
 }
