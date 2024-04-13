@@ -153,10 +153,19 @@ export const queryCommand = async (queryString: string) => {
 };
 
 const processFile = async (path: string) => {
+  console.log(`[process-file] ${path} detecting hand-written text`);
   const detectResult = await detect(path);
+
+  console.log(`[process-file] ${path} editing hand-written text`);
   const editResult = await edit(detectResult);
+
+  console.log(`[process-file] ${path} describing hand-written text`);
   const describeResult = await describe(editResult);
+
+  console.log(`[process-file] ${path} embedding hand-written text`);
   const embedResult = await embed(describeResult);
+
+  console.log(`[process-file] ${path} done`);
   return embedResult;
 };
 
@@ -174,6 +183,7 @@ export const processDirCommand = async (path: string, extension = ".jpeg") => {
   const files = await listFilesByExtension(resolvedPath, extension);
   const results = await Promise.allSettled(files.map(processFile));
 
+  console.log(`[process-dir] ${results.length} files processed`);
   const embeddings = results
     .filter(
       (result): result is PromiseFulfilledResult<EmbeddingDescription> =>
