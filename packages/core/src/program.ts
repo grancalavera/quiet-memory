@@ -68,11 +68,6 @@ program
   .action(commands.embedQueryCommand);
 
 program
-  .command("query")
-  .argument("<query>", "query string")
-  .action(commands.queryCommand);
-
-program
   .command("process-file")
   .argument("<path>", "path to file to process")
   .action(commands.processFileCommand);
@@ -84,6 +79,11 @@ program
   .action((path, options) =>
     commands.processDirCommand(path, options.extension)
   );
+
+program
+  .command("query")
+  .argument("<query>", "query string")
+  .action(commands.queryCommand);
 
 async function main() {
   await program.parseAsync(process.argv);
