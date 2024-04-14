@@ -8,10 +8,9 @@ import { DocumentDescription, describe } from "../services/describe";
 import { detect } from "../services/detect";
 import { edit } from "../services/edit";
 import { EmbeddingDescription, embed } from "../services/embed";
-import { query } from "../services/query";
+import { queryVectorStore, ragQuery } from "../services/query";
 import { store } from "../services/store";
 import {
-  CommandOptions,
   ProcessDir,
   ProcessFile,
   makeDirCommand,
@@ -147,9 +146,14 @@ export const embedQueryCommand = async (path: string, query: string) => {
   console.log(`[embed-query] done: ${resolvedPath}`);
 };
 
-export const queryCommand = async (queryString: string) => {
-  const rows = await query(queryString);
+export const naiveQueryCommand = async (queryString: string) => {
+  const rows = await queryVectorStore(queryString);
   console.log(rows);
+};
+
+export const ragQueryCommand = async (queryString: string) => {
+  const completion = await ragQuery(queryString);
+  console.log(completion);
 };
 
 const processFile = async (path: string) => {

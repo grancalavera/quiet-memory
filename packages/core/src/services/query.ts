@@ -1,8 +1,8 @@
-import { createEmbedding } from "../lib/createEmbedding";
 import { Pool } from "pg";
-import { DocumentMetadata } from "./describe";
-import { EmbeddingDescription } from "./embed";
 import { z } from "zod";
+import { createEmbedding } from "../lib/createEmbedding";
+import { DocumentMetadata } from "./describe";
+import { createCompletion } from "../lib/createCompletion";
 
 const db = new Pool();
 
@@ -21,9 +21,9 @@ const QueryResult = z.object({
 
 export type QueryResult = z.infer<typeof QueryResult>;
 
-export const query = async (
+export const queryVectorStore = async (
   query: string,
-  { filter = {}, limit = 3 }: QueryOptions = {}
+  { filter = {}, limit = 20 }: QueryOptions = {}
 ): Promise<QueryResult[]> => {
   const embedding = await createEmbedding(query);
 
@@ -46,4 +46,19 @@ export const query = async (
     console.log("[query] failed to parse row: ", row, parsed.error);
     return [];
   });
+};
+
+const ragQueryCompletion = (context: string) =>
+  createCompletion(
+    `Answer the question based on the following context: 
+---
+${context}
+---
+Do not use any other exixting information. Question:`
+  );
+
+export const ragQuery = async (query: string) => {
+  const queryResult = await queryVectorStore(query);
+  const context = queryResult.map((result) => result.content).join(" ");
+  return ragQueryCompletion(context)(query);
 };
