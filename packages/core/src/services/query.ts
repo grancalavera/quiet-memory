@@ -50,11 +50,11 @@ export const queryVectorStore = async (
 
 const ragQueryCompletion = (context: string) =>
   createCompletion(
-    `Answer the question based on the following context: 
+    `Answer the question based on the following context:
 ---
 ${context}
 ---
-Do not use any other exixting information. Question:`
+Do not use any other existing information. Question:`
   );
 
 export const ragQuery = async (query: string) => {

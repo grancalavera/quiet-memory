@@ -4,8 +4,8 @@ select 'create database qm' where not exists (select from pg_database where datn
 -- https://js.langchain.com/docs/integrations/vectorstores/supabase
 -- https://supabase.com/blog/openai-embeddings-postgres-vector
 create extension if not exists vector;
-
 drop table if exists documents cascade;
+drop function if exists match_documents;
 
 -- Create a table to store your documents
 create table documents (
@@ -17,7 +17,7 @@ create table documents (
 
 -- Create a function to search for documents
 create function match_documents (
-  query_embedding vector(1536), 
+  query_embedding vector(1536),
   match_count int DEFAULT null,
   filter jsonb DEFAULT '{}'
 ) returns table (
@@ -45,7 +45,7 @@ begin
 end;
 $$;
 
--- calling a function 
+-- calling a function
 -- https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html#SQL-SYNTAX-CALLING-FUNCS
 
 

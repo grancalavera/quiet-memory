@@ -1,4 +1,4 @@
 FROM pgvector/pgvector:pg16
-LABEL name="Auction House Database, using PostgreSQL."
-WORKDIR /auction-house
+LABEL name="Quiet Memory Database, using PostgreSQL."
+WORKDIR /quiet-memory
 VOLUME [ "/db-scripts" ]
